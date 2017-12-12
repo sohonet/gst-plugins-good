@@ -62,9 +62,8 @@ struct _GstUDPSrc {
   gboolean   reuse;
   gboolean   loop;
   gboolean   retrieve_sender_address;
-
-  /* stats */
-  guint      max_size;
+  gint       mtu;
+  gint       max_read_packets;
 
   /* our sockets */
   GSocket   *used_socket;
@@ -74,15 +73,17 @@ struct _GstUDPSrc {
   gboolean   made_cancel_fd;
   GCancellable *cancellable;
 
-  /* memory management */
-  GstAllocator *allocator;
-  GstAllocationParams params;
+  /* receive thread */
+  GstTask   *receive_task;
+  GRecMutex  receive_task_lock;
+  GMutex     lock;
+  GCond      cond;
+  GstFlowReturn last_return;
 
-  GstMemory   *mem;
-  GstMapInfo   map;
-  GstMemory   *mem_max;
-  GstMapInfo   map_max;
-  GInputVector vec[2];
+  /* buffers */
+  GstAtomicQueue *buffer_queue;
+  GArray    *input_msgs;
+  GArray    *input_msgs_data;
 
   gchar     *uri;
 };
